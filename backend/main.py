@@ -46,18 +46,24 @@ class MessageRequest(BaseModel):
 
 @app.post("/send-otp")
 def send_signup_otp(data: EmailRequest):
+    print("OTP request received:", data.email)
+
     existing_user = users_collection.find_one({"email": data.email})
+
+    print("Existing user:", existing_user)
 
     if existing_user and existing_user.get("verified") == True:
         return {
-            "error": "This email is already registered. Please login with your account."
+            "error": "This email is already registered."
         }
 
     sent = send_otp(data.email)
 
+    print("OTP sent result:", sent)
+
     if not sent:
         return {
-            "error": "OTP email failed to send. Check EMAIL_ADDRESS and EMAIL_PASSWORD in Render."
+            "error": "OTP failed"
         }
 
     return {
