@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API = "https://YOUR_RENDER_BACKEND_URL.onrender.com";
+const API = "https://priva-backend.onrender.com";
 
 export default API;
 
