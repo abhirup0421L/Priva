@@ -36,9 +36,14 @@ def send_otp(email):
     msg["To"] = email
     msg.set_content(f"Your Priva OTP is: {otp}")
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-        smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-        smtp.send_message(msg)
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+            smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+            smtp.send_message(msg)
+
+    except Exception as e:
+        print("EMAIL SEND ERROR:", e)
+        return False
 
     users_collection.update_one(
         {"email": email},
