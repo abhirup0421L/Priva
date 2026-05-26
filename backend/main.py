@@ -23,7 +23,6 @@ class EmailRequest(BaseModel):
 
 class SignupRequest(BaseModel):
     email: EmailStr
-    otp: str
     user_id: str
     password: str
 
@@ -73,33 +72,20 @@ def send_signup_otp(data: EmailRequest):
 
 @app.post("/signup")
 def signup(data: SignupRequest):
-    user = users_collection.find_one({"email": data.email})
-
-    if not user:
-        return {"error": "OTP not requested"}
-
-    if user.get("otp") != data.otp:
-        return {"error": "Invalid OTP"}
-
-    if user.get("otp_expiry") < datetime.utcnow():
-        return {"error": "OTP expired"}
+    if users_collection.find_one({"email": data.email}):
+        return {"error": "Email already registered"}
 
     if users_collection.find_one({"user_id": data.user_id}):
         return {"error": "User ID already exists"}
 
-    users_collection.update_one(
-        {"email": data.email},
-        {
-            "$set": {
-                "user_id": data.user_id,
-                "password": hash_password(data.password),
-                "verified": True,
-                "online": False,
-                "last_seen": datetime.utcnow(),
-            },
-            "$unset": {"otp": "", "otp_expiry": ""},
-        },
-    )
+    users_collection.insert_one({
+        "email": data.email,
+        "user_id": data.user_id,
+        "password": hash_password(data.password),
+        "verified": True,
+        "online": False,
+        "last_seen": datetime.utcnow(),
+    })
 
     return {"message": "Signup successful"}
 
