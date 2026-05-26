@@ -17,6 +17,11 @@ function App() {
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [showProfile, setShowProfile] = useState(false);
+  const goBackToChat = () => {
+    setShowProfile(false);
+  };
 
   useEffect(() => {
     if (currentUser) {
@@ -65,6 +70,20 @@ function App() {
       return () => clearInterval(interval);
     }
   }, [selectedFriend]);
+
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === "Escape" && showProfile) {
+        setShowProfile(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleEsc);
+
+    return () => {
+      window.removeEventListener("keydown", handleEsc);
+    };
+  }, [showProfile]);
 
   const signup = async () => {
     setNotice("");
@@ -135,6 +154,19 @@ function App() {
     setPassword("");
     setNotice("");
     setPage("login");
+  };
+
+  const searchSuggestions = async (value) => {
+    setSearchId(value);
+    setNotice("");
+
+    if (!value.trim()) {
+      setSuggestions([]);
+      return;
+    }
+
+    const res = await api.get(`/search-users/${value}/${currentUser}`);
+    setSuggestions(res.data);
   };
 
   const loadFriends = async () => {
@@ -304,11 +336,35 @@ function App() {
           <input
             placeholder="Search user ID"
             value={searchId}
-            onChange={(e) => setSearchId(e.target.value)}
+            onChange={(e) => searchSuggestions(e.target.value)}
           />
 
-          <button onClick={searchUser}>Search</button>
-          <button onClick={addFriend}>Add Friend</button>
+          {suggestions.length > 0 && (
+            <div className="suggestion-dropdown">
+              {suggestions.map((user) => (
+                <div className="suggestion-row" key={user.user_id}>
+                  <span>{user.user_id}</span>
+
+                  <button
+                    className="suggestion-add-btn"
+                    onClick={async () => {
+                      const res = await api.post("/add-friend", {
+                        user_id: currentUser,
+                        friend_id: user.user_id,
+                      });
+
+                      setNotice(res.data.message || res.data.error);
+                      setSearchId("");
+                      setSuggestions([]);
+                      loadFriends();
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <h3>Friends</h3>
@@ -340,8 +396,59 @@ function App() {
 
       <div className="chat-section">
         {selectedFriend ? (
-          <>
-            <div className="chat-header">{selectedFriend}</div>
+          showProfile ? (
+            <div className="profile-view">
+
+              <button
+                className="back-btn"
+                onClick={goBackToChat}
+              >
+                ← Back
+              </button>
+
+              <div className="profile-avatar">☻</div>
+
+              <h2>{selectedFriend}</h2>
+
+              <button
+                className="delete-friend-btn"
+                onClick={async () => {
+                  const res = await api.delete("/remove-friend", {
+                    data: {
+                      user_id: currentUser,
+                      friend_id: selectedFriend,
+                    },
+                  });
+
+                  setNotice(res.data.message || res.data.error);
+
+                  setSelectedFriend(null);
+                  setShowProfile(false);
+                  setMessages([]);
+                  loadFriends();
+                }}
+              >
+                Remove Friend
+              </button>
+            </div>
+          ) : (
+            <>
+            <div
+              className="chat-header"
+              onClick={() => setShowProfile(true)}
+            >
+              <div className="chat-user-avatar">☻</div>
+
+              <div className="chat-user-info">
+                <h3>{selectedFriend}</h3>
+
+                <small>
+                  {friends.find((f) => f.user_id === selectedFriend)?.online
+                    ? "Online"
+                    : `last seen ${friends.find((f) => f.user_id === selectedFriend)?.last_seen || "recently"}`}
+                </small>
+              </div>
+            </div>
 
             <div className="messages">
               {messages.length === 0 ? (
@@ -369,6 +476,7 @@ function App() {
               <button onClick={sendMessage}>Send</button>
             </div>
           </>
+          )
         ) : (
           <div className="empty-chat">Select a friend to chat</div>
         )}
