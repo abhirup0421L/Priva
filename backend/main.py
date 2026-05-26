@@ -152,7 +152,7 @@ def search_users(query: str, current_user: str):
     users = users_collection.find(
         {
             "$and": [
-                {"user_id": {"$regex": query, "$options": "i"}},
+                {"user_id": {"$regex": f"^{query}", "$options": "i"}},
                 {"user_id": {"$ne": current_user}},
             ]
         },
