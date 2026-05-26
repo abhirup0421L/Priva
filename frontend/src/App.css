@@ -182,3 +182,30 @@
     border-right-color: var(--border);
   }
 }
+
+.back-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+
+  width: fit-content !important;
+  min-width: 90px;
+
+  padding: 10px 18px !important;
+  margin: 0 !important;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 10px;
+  background: #14001f !important;
+  border: 1px solid #7b2cff;
+  color: #c77dff;
+
+  z-index: 10;
+}
+
+.back-btn:hover {
+  background: #220033 !important;
+}
