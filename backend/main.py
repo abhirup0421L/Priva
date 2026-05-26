@@ -53,7 +53,12 @@ def send_signup_otp(data: EmailRequest):
             "error": "This email is already registered. Please login with your account."
         }
 
-    send_otp(data.email)
+    sent = send_otp(data.email)
+
+    if not sent:
+        return {
+            "error": "OTP email failed to send. Check EMAIL_ADDRESS and EMAIL_PASSWORD in Render."
+        }
 
     return {
         "message": "OTP sent successfully"
