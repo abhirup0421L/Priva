@@ -1,7 +1,7 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from database import users_collection, friends_collection, messages_collection
 from auth import send_otp, hash_password, verify_password, create_token
 from websocket_manager import manager
@@ -42,32 +42,37 @@ class MessageRequest(BaseModel):
     receiver_id: str
     text: str
 
+IST = timezone(timedelta(hours=5, minutes=30))
+
+def now_ist():
+    return datetime.now(IST)
+
+def now_ist_text():
+    return datetime.now(IST).strftime("%I:%M %p")
+
+def format_last_seen(value):
+    if not value:
+        return "recently"
+
+    if hasattr(value, "strftime"):
+        return value.strftime("%I:%M %p")
+
+    return str(value)
+
 
 @app.post("/send-otp")
 def send_signup_otp(data: EmailRequest):
-    print("OTP request received:", data.email)
-
     existing_user = users_collection.find_one({"email": data.email})
 
-    print("Existing user:", existing_user)
-
     if existing_user and existing_user.get("verified") == True:
-        return {
-            "error": "This email is already registered."
-        }
+        return {"error": "This email is already registered."}
 
     sent = send_otp(data.email)
 
-    print("OTP sent result:", sent)
-
     if not sent:
-        return {
-            "error": "OTP failed"
-        }
+        return {"error": "OTP failed"}
 
-    return {
-        "message": "OTP sent successfully"
-    }
+    return {"message": "OTP sent successfully"}
 
 
 @app.post("/signup")
@@ -84,7 +89,7 @@ def signup(data: SignupRequest):
         "password": hash_password(data.password),
         "verified": True,
         "online": False,
-        "last_seen": datetime.utcnow(),
+        "last_seen": now_ist_text(),
     })
 
     return {"message": "Signup successful"}
@@ -102,7 +107,7 @@ def login(data: LoginRequest):
 
     users_collection.update_one(
         {"user_id": data.user_id},
-        {"$set": {"online": True, "last_seen": datetime.utcnow()}},
+        {"$set": {"online": True}},
     )
 
     token = create_token(data.user_id)
@@ -118,7 +123,12 @@ def login(data: LoginRequest):
 def logout(user_id: str):
     users_collection.update_one(
         {"user_id": user_id},
-        {"$set": {"online": False, "last_seen": datetime.utcnow()}},
+        {
+            "$set": {
+                "online": False,
+                "last_seen": now_ist_text(),
+            }
+        },
     )
 
     messages_collection.delete_many({
@@ -131,17 +141,25 @@ def logout(user_id: str):
     return {"message": "Logged out"}
 
 
-@app.get("/search-user/{user_id}")
-def search_user(user_id: str):
-    user = users_collection.find_one(
-        {"user_id": user_id},
+@app.get("/search-users/{query}/{current_user}")
+def search_users(query: str, current_user: str):
+    query = query.strip()
+    current_user = current_user.strip()
+
+    if not query:
+        return []
+
+    users = users_collection.find(
+        {
+            "$and": [
+                {"user_id": {"$regex": query, "$options": "i"}},
+                {"user_id": {"$ne": current_user}},
+            ]
+        },
         {"_id": 0, "user_id": 1, "online": 1},
-    )
+    ).limit(8)
 
-    if not user:
-        return {"error": "User not found"}
-
-    return user
+    return list(users)
 
 
 @app.post("/add-friend")
@@ -174,10 +192,35 @@ def add_friend(data: FriendRequest):
     friends_collection.insert_one({
         "user1": user_id,
         "user2": friend_id,
-        "created_at": datetime.utcnow(),
+        "created_at": now_ist(),
     })
 
     return {"message": "Friend added"}
+
+
+@app.delete("/remove-friend")
+def remove_friend(data: FriendRequest):
+    user_id = data.user_id.strip()
+    friend_id = data.friend_id.strip()
+
+    result = friends_collection.delete_one({
+        "$or": [
+            {"user1": user_id, "user2": friend_id},
+            {"user1": friend_id, "user2": user_id},
+        ]
+    })
+
+    messages_collection.delete_many({
+        "$or": [
+            {"sender_id": user_id, "receiver_id": friend_id},
+            {"sender_id": friend_id, "receiver_id": user_id},
+        ]
+    })
+
+    if result.deleted_count == 0:
+        return {"error": "Friend not found"}
+
+    return {"message": "Friend removed"}
 
 
 @app.get("/friends/{user_id}")
@@ -187,7 +230,7 @@ def get_friends(user_id: str):
     friends = friends_collection.find({
         "$or": [
             {"user1": user_id},
-            {"user2": user_id}
+            {"user2": user_id},
         ]
     })
 
@@ -195,16 +238,11 @@ def get_friends(user_id: str):
     added = set()
 
     for f in friends:
-        if f["user1"] == user_id:
-            friend_id = f["user2"]
-        else:
-            friend_id = f["user1"]
+        friend_id = f["user2"] if f["user1"] == user_id else f["user1"]
 
-        # stop showing yourself
         if friend_id == user_id:
             continue
 
-        # stop duplicates
         if friend_id in added:
             continue
 
@@ -214,6 +252,7 @@ def get_friends(user_id: str):
             result.append({
                 "user_id": friend_id,
                 "online": friend_user.get("online", False),
+                "last_seen": format_last_seen(friend_user.get("last_seen")),
             })
             added.add(friend_id)
 
@@ -255,7 +294,7 @@ async def send_message(data: MessageRequest):
         "receiver_id": data.receiver_id,
         "text": data.text,
         "read": False,
-        "created_at": datetime.utcnow(),
+        "created_at": now_ist(),
     }
 
     messages_collection.insert_one(message)
@@ -287,5 +326,10 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
 
         users_collection.update_one(
             {"user_id": user_id},
-            {"$set": {"online": False, "last_seen": datetime.utcnow()}},
+            {
+                "$set": {
+                    "online": False,
+                    "last_seen": now_ist_text(),
+                }
+            },
         )
