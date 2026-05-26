@@ -30,6 +30,16 @@ def create_token(user_id):
 def send_otp(email):
     otp = str(random.randint(100000, 999999))
 
+    msg = EmailMessage()
+    msg["Subject"] = "Your Priva OTP Verification"
+    msg["From"] = EMAIL_ADDRESS
+    msg["To"] = email
+    msg.set_content(f"Your Priva OTP is: {otp}")
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+        smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+        smtp.send_message(msg)
+
     users_collection.update_one(
         {"email": email},
         {
@@ -37,19 +47,10 @@ def send_otp(email):
                 "email": email,
                 "otp": otp,
                 "otp_expiry": datetime.utcnow() + timedelta(minutes=5),
+                "verified": False,
             }
         },
         upsert=True,
     )
-
-    msg = EmailMessage()
-    msg["Subject"] = "Your Priva OTP Verification"
-    msg["From"] = EMAIL_ADDRESS
-    msg["To"] = email
-    msg.set_content(f"Your OTP is: {otp}")
-
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-        smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-        smtp.send_message(msg)
 
     return True
