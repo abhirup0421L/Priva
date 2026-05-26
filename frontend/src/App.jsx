@@ -33,7 +33,7 @@ function App() {
   useEffect(() => {
     if (!currentUser) return;
 
-    const ws = new WebSocket(`ws://localhost:8000/ws/${currentUser}`);
+    const ws = new WebSocket(`wss://priva-backend.onrender.com/ws/${currentUser}`);
 
     ws.onmessage = () => {
       loadFriends();
