@@ -76,9 +76,14 @@ p {
 /* LEFT SIDEBAR */
 .sidebar {
   width: 300px;
+  height: 100vh;
   background: #050008;
   border-right: 1px solid #24003d;
   padding: 18px;
+
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .sidebar h2 {
@@ -90,17 +95,7 @@ p {
   gap: 10px;
 }
 
-.sidebar h2::before {
-  content: "☻";
-  width: 34px;
-  height: 34px;
-  background: linear-gradient(135deg, #7b2cff, #d000ff);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+
 
 .search-box {
   margin-bottom: 18px;
@@ -118,6 +113,26 @@ p {
 }
 
 /* FRIEND LIST */
+.friend-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 5px;
+}
+
+/* smooth scrollbar */
+.friend-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.friend-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.friend-list::-webkit-scrollbar-thumb {
+  background: #7b2cff;
+  border-radius: 10px;
+}
 .friend {
   padding: 13px 15px;
   margin: 10px 0;
@@ -205,23 +220,48 @@ p {
 
 .msg {
   max-width: 55%;
+  width: fit-content;
+  min-width: 80px;
+
   padding: 13px 18px;
   margin: 12px 0;
-  border-radius: 14px;
+
+  border-radius: 18px;
   font-size: 16px;
+
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+
+  height: auto;
 }
 
 .own {
   margin-left: auto;
-  background: linear-gradient(135deg, #7b2cff, #9d20ff);
+  background: linear-gradient(
+    135deg,
+    var(--main-color),
+    color-mix(in srgb, var(--main-color) 70%, black)
+  ) !important;
+
   color: white;
+  border: 1px solid var(--main-color) !important;
+  max-width: 70%;
+}
+
+/* White theme fix */
+.theme-9 .own {
+  color: black !important;
 }
 
 .other {
   margin-right: auto;
   background: #160020;
-  border: 1px solid #7b2cff;
+  border: 1px solid var(--main-color) !important;
   color: white;
+
+  max-width: 70%;
 }
 
 .empty-chat {
@@ -246,6 +286,11 @@ p {
 .send-box button {
   width: 90px;
   margin-left: 10px;
+  background: linear-gradient(
+    135deg,
+    var(--main-color),
+    color-mix(in srgb, var(--main-color) 70%, black)
+  ) !important;
 }
 
 /* NOTICE */
@@ -359,4 +404,306 @@ p {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
+}
+
+.msg {
+  position: relative;
+}
+
+.message-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 6px;
+  background: #12001f;
+  border: 1px solid #7b2cff;
+  border-radius: 10px;
+  z-index: 99;
+  overflow: hidden;
+}
+
+.message-menu button {
+  width: 120px !important;
+  margin: 0 !important;
+  background: transparent !important;
+  color: #ff4d7d !important;
+  border-radius: 0 !important;
+}
+
+.self-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.self-user img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.self-user h2 {
+  margin: 0;
+}
+
+.self-profile-panel {
+  animation: profileOpen 0.35s ease;
+  background: #090010;
+  border: 1px solid #7b2cff;
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 20px;
+}
+
+.profile-pic-slider {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+
+.profile-pic-slider img {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  cursor: pointer;
+  object-fit: cover;
+  border: 2px solid transparent;
+}
+
+.profile-pic-slider .selected-pic {
+  border-color: #c77dff;
+  box-shadow: 0 0 18px rgba(199, 125, 255, 0.7);
+}
+
+.panel-logout {
+  margin-top: 20px;
+}
+
+.chat-user-avatar-img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+@keyframes profileOpen {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.friend-profile-big {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 20px auto;
+  display: block;
+  border: 3px solid #b400ff;
+  box-shadow: 0 0 25px rgba(180, 0, 255, 0.5);
+}
+
+
+/* =========================
+   THEME COLORS
+========================= */
+
+.theme-box {
+  margin-top: 18px;
+  text-align: center;
+}
+
+.theme-box p {
+  color: white;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  justify-items: center;
+}
+
+.theme-dot {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.theme-dot:hover {
+  transform: scale(1.12);
+}
+
+.active-theme {
+  border: 3px solid white;
+  box-shadow: 0 0 14px white;
+}
+
+/* Theme picker colors */
+
+.theme-dot-1 { background: #a020f0; } /* Purple */
+.theme-dot-2 { background: #ff4d4d; } /* Red */
+.theme-dot-3 { background: #00d26a; } /* Green */
+.theme-dot-4 { background: #0099ff; } /* Blue */
+.theme-dot-5 { background: #ff9900; } /* Orange */
+.theme-dot-6 { background: #ffd700; } /* Yellow */
+.theme-dot-7 { background: #ff66cc; } /* Pink */
+.theme-dot-8 { background: #00cccc; } /* Cyan */
+.theme-dot-9 { background: #ffffff; } /* White */
+
+
+/* =========================
+   ACTUAL APP THEMES
+========================= */
+
+/* 1 = Purple (Default) */
+.theme-1 {
+  --main-color: #a020f0;
+}
+
+/* 2 = Red */
+.theme-2 {
+  --main-color: #ff4d4d;
+}
+
+/* 3 = Green */
+.theme-3 {
+  --main-color: #00d26a;
+}
+
+/* 4 = Blue */
+.theme-4 {
+  --main-color: #0099ff;
+}
+
+/* 5 = Orange */
+.theme-5 {
+  --main-color: #ff9900;
+}
+
+/* 6 = Yellow */
+.theme-6 {
+  --main-color: #ffd700;
+}
+
+/* 7 = Pink */
+.theme-7 {
+  --main-color: #ff66cc;
+}
+
+/* 8 = Cyan */
+.theme-8 {
+  --main-color: #00cccc;
+}
+
+/* 9 = White */
+.theme-9 {
+  --main-color: #ffffff;
+}
+
+
+/* Apply theme everywhere */
+
+/* Borders */
+.theme-1 *,
+.theme-2 *,
+.theme-3 *,
+.theme-4 *,
+.theme-5 *,
+.theme-6 *,
+.theme-7 *,
+.theme-8 *,
+.theme-9 * {
+  border-color: var(--main-color) !important;
+}
+
+/* Buttons */
+.theme-1 button:not(.auth-box button),
+.theme-2 button:not(.auth-box button),
+.theme-3 button:not(.auth-box button),
+.theme-4 button:not(.auth-box button),
+.theme-5 button:not(.auth-box button),
+.theme-6 button:not(.auth-box button),
+.theme-7 button:not(.auth-box button),
+.theme-8 button:not(.auth-box button),
+.theme-9 button:not(.auth-box button) {
+  background: linear-gradient(
+    135deg,
+    var(--main-color),
+    color-mix(in srgb, var(--main-color) 70%, black)
+  );
+}
+
+/* Text */
+.theme-1 h1, .theme-1 h2, .theme-1 h3,
+.theme-2 h1, .theme-2 h2, .theme-2 h3,
+.theme-3 h1, .theme-3 h2, .theme-3 h3,
+.theme-4 h1, .theme-4 h2, .theme-4 h3,
+.theme-5 h1, .theme-5 h2, .theme-5 h3,
+.theme-6 h1, .theme-6 h2, .theme-6 h3,
+.theme-7 h1, .theme-7 h2, .theme-7 h3,
+.theme-8 h1, .theme-8 h2, .theme-8 h3,
+.theme-9 h1, .theme-9 h2, .theme-9 h3 {
+  color: var(--main-color);
+}
+
+/* Friend cards */
+.friend,
+.msg,
+.chat-header,
+.send-box input,
+.search-box input {
+  border: 1px solid var(--main-color);
+}
+
+/* Scrollbar */
+.friend-list::-webkit-scrollbar-thumb,
+.messages::-webkit-scrollbar-thumb {
+  background: var(--main-color);
+  border-radius: 10px;
+}
+
+.theme-dot-1 { background: #a020f0 !important; }
+.theme-dot-2 { background: #ff4d4d !important; }
+.theme-dot-3 { background: #00d26a !important; }
+.theme-dot-4 { background: #0099ff !important; }
+.theme-dot-5 { background: #ff9900 !important; }
+.theme-dot-6 { background: #ffd700 !important; }
+.theme-dot-7 { background: #ff66cc !important; }
+.theme-dot-8 { background: #00cccc !important; }
+.theme-dot-9 { background: #ffffff !important; }
+
+.unread-count {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  border-radius: 999px;
+
+  background: linear-gradient(
+    135deg,
+    var(--main-color),
+    color-mix(in srgb, var(--main-color) 70%, black)
+  );
+
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
