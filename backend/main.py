@@ -5,6 +5,7 @@ from datetime import datetime, timezone, timedelta
 from database import users_collection, friends_collection, messages_collection
 from auth import send_otp, hash_password, verify_password, create_token
 from websocket_manager import manager
+from bson import ObjectId
 
 app = FastAPI()
 
@@ -41,6 +42,21 @@ class MessageRequest(BaseModel):
     sender_id: str
     receiver_id: str
     text: str
+
+class DeleteMessageRequest(BaseModel):
+    message_id: str
+    user_id: str
+
+class ProfilePicRequest(BaseModel):
+    user_id: str
+    profile_pic: int
+
+class ThemeRequest(BaseModel):
+    user_id: str
+    theme: int
+
+
+
 
 IST = timezone(timedelta(hours=5, minutes=30))
 
@@ -90,6 +106,8 @@ def signup(data: SignupRequest):
         "verified": True,
         "online": False,
         "last_seen": now_ist_text(),
+        "profile_pic": 1,
+        "theme": 1,
     })
 
     return {"message": "Signup successful"}
@@ -116,6 +134,8 @@ def login(data: LoginRequest):
         "message": "Login successful",
         "token": token,
         "user_id": data.user_id,
+        "profile_pic": user.get("profile_pic", 1),
+        "theme": user.get("theme", 1),
     }
 
 
@@ -223,6 +243,30 @@ def remove_friend(data: FriendRequest):
     return {"message": "Friend removed"}
 
 
+@app.post("/update-profile-pic")
+def update_profile_pic(data: ProfilePicRequest):
+    if data.profile_pic < 1 or data.profile_pic > 5:
+        return {"error": "Invalid profile picture"}
+
+    users_collection.update_one(
+        {"user_id": data.user_id},
+        {"$set": {"profile_pic": data.profile_pic}}
+    )
+
+    return {"message": "Profile picture updated"}
+
+@app.post("/update-theme")
+def update_theme(data: ThemeRequest):
+    if data.theme < 1 or data.theme > 9:
+        return {"error": "Invalid theme"}
+
+    users_collection.update_one(
+        {"user_id": data.user_id},
+        {"$set": {"theme": data.theme}}
+    )
+
+    return {"message": "Theme updated"}
+
 @app.get("/friends/{user_id}")
 def get_friends(user_id: str):
     user_id = user_id.strip()
@@ -249,12 +293,39 @@ def get_friends(user_id: str):
         friend_user = users_collection.find_one({"user_id": friend_id})
 
         if friend_user:
+            unread_count = messages_collection.count_documents({
+                "sender_id": friend_id,
+                "receiver_id": user_id,
+                "read": False,
+            })
+
+            last_message = messages_collection.find_one(
+                {
+                    "$or": [
+                        {"sender_id": user_id, "receiver_id": friend_id},
+                        {"sender_id": friend_id, "receiver_id": user_id},
+                    ]
+                },
+                sort=[("created_at", -1)]
+            )
+
             result.append({
                 "user_id": friend_id,
                 "online": friend_user.get("online", False),
                 "last_seen": format_last_seen(friend_user.get("last_seen")),
+                "profile_pic": friend_user.get("profile_pic", 1),
+                "unread_count": unread_count,
+                "last_message_time": (
+                    last_message.get("created_at")
+                    if last_message
+                    else f.get("created_at")
+                ),
             })
-            added.add(friend_id)
+
+    result.sort(
+        key=lambda x: x.get("last_message_time") or datetime.min.replace(tzinfo=IST),
+        reverse=True
+    )
 
     return result
 
@@ -277,6 +348,7 @@ def get_messages(user1: str, user2: str):
 
     for m in messages:
         result.append({
+            "message_id": str(m["_id"]),
             "sender_id": m["sender_id"],
             "receiver_id": m["receiver_id"],
             "text": m["text"],
@@ -286,6 +358,19 @@ def get_messages(user1: str, user2: str):
 
     return result
 
+@app.delete("/delete-message")
+def delete_message(data: DeleteMessageRequest):
+    msg = messages_collection.find_one({"_id": ObjectId(data.message_id)})
+
+    if not msg:
+        return {"error": "Message not found"}
+
+    if msg["sender_id"] != data.user_id:
+        return {"error": "You can only delete your own message"}
+
+    messages_collection.delete_one({"_id": ObjectId(data.message_id)})
+
+    return {"message": "Message deleted"}
 
 @app.post("/send-message")
 async def send_message(data: MessageRequest):
