@@ -1,6 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { api } from "./api";
 import "./style.css";
+
+import pic1 from "./assets/pic1.png";
+import pic2 from "./assets/pic2.png";
+import pic3 from "./assets/pic3.png";
+import pic4 from "./assets/pic4.png";
+import pic5 from "./assets/pic5.png";
+
+const profilePics = {
+  1: pic1,
+  2: pic2,
+  3: pic3,
+  4: pic4,
+  5: pic5,
+};
 
 function App() {
   const [page, setPage] = useState("login");
@@ -16,19 +30,21 @@ function App() {
   const [searchId, setSearchId] = useState("");
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [messages, setMessages] = useState([]);
+  const messagesEndRef = useRef(null);
   const [text, setText] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [showProfile, setShowProfile] = useState(false);
+  const [shouldScroll, setShouldScroll] = useState(false);
+  const [showSelfProfile, setShowSelfProfile] = useState(false);
+  const [myPic, setMyPic] = useState(1);
+  const [theme, setTheme] = useState(1);
+  const [messageMenu, setMessageMenu] = useState(null);
   const goBackToChat = () => {
     setShowProfile(false);
   };
 
-  useEffect(() => {
-    if (currentUser) {
-      loadFriends();
-      setPage("chat");
-    }
-  }, [currentUser]);
+
+
 
   useEffect(() => {
     if (!currentUser) return;
@@ -41,6 +57,7 @@ function App() {
       loadFriends();
       if (selectedFriend) {
         loadMessages();
+        setShouldScroll(true);
       }
     };
 
@@ -70,6 +87,16 @@ function App() {
       return () => clearInterval(interval);
     }
   }, [selectedFriend]);
+
+  useEffect(() => {
+    if (shouldScroll) {
+      messagesEndRef.current?.scrollIntoView({
+        behavior: "smooth",
+      });
+
+      setShouldScroll(false);
+    }
+  }, [messages, shouldScroll]);
 
   useEffect(() => {
     const handleEsc = (e) => {
@@ -140,6 +167,9 @@ function App() {
 
     localStorage.setItem("user_id", res.data.user_id);
     setCurrentUser(res.data.user_id);
+    setMyPic(res.data.profile_pic || 1);
+    setTheme(res.data.theme || 1);
+    setShowSelfProfile(false);
     setPage("chat");
   };
 
@@ -147,6 +177,9 @@ function App() {
     await api.post(`/logout/${currentUser}`);
 
     localStorage.removeItem("user_id");
+    setShowSelfProfile(false);
+    setMyPic(1);
+    setTheme(1);
     setCurrentUser(null);
     setSelectedFriend(null);
     setMessages([]);
@@ -217,6 +250,19 @@ function App() {
     setMessages(res.data);
   };
 
+  const deleteMessage = async (messageId) => {
+    const res = await api.delete("/delete-message", {
+      data: {
+        message_id: messageId,
+        user_id: currentUser,
+      },
+    });
+
+    
+    setMessageMenu(null);
+    loadMessages();
+  };
+
   const sendMessage = async () => {
     if (!text.trim() || !selectedFriend) return;
 
@@ -239,6 +285,7 @@ function App() {
         read: false,
       },
     ]);
+    setShouldScroll(true);
   };
 
   if (page === "login") {
@@ -326,9 +373,63 @@ function App() {
   }
 
   return (
-    <div className="chat-app">
+    <div className={`chat-app theme-${theme}`}>
       <div className="sidebar">
-        <h2>{currentUser}</h2>
+        <div
+          className="self-user"
+          onClick={() => setShowSelfProfile(!showSelfProfile)}
+        >
+          <img src={profilePics[myPic]} />
+          <h2>{currentUser}</h2>
+        </div>
+
+        {showSelfProfile && (
+          <div className="self-profile-panel">
+            <div className="profile-pic-slider">
+              {[1, 2, 3, 4, 5].map((pic) => (
+                <img
+                  key={pic}
+                  src={profilePics[pic]}
+                  className={myPic === pic ? "selected-pic" : ""}
+                  onClick={async () => {
+                    setMyPic(pic);
+                    await api.post("/update-profile-pic", {
+                      user_id: currentUser,
+                      profile_pic: pic,
+                    });
+                  }}
+                />
+              ))}
+            </div>
+
+              <div className="theme-box">
+                <p>Theme</p>
+
+                <div className="theme-grid">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((t) => (
+                    <button
+                      key={t}
+                      className={`theme-dot theme-dot-${t} ${
+                        theme === t ? "active-theme" : ""
+                      }`}
+                      onClick={async () => {
+                        setTheme(t);
+
+                        await api.post("/update-theme", {
+                          user_id: currentUser,
+                          theme: t,
+                        });
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <button className="panel-logout" onClick={logout}>
+                Logout
+              </button>
+          </div>
+        )}
 
         {notice && <div className="notice-box">{notice}</div>}
 
@@ -369,29 +470,35 @@ function App() {
 
         <h3>Friends</h3>
 
-        {friends.map((f) => (
-          <div
-            key={f.user_id}
-            className="friend"
-            onClick={async () => {
-              setSelectedFriend(f.user_id);
-              setMessages([]);
+        <div className="friend-list">
+          {friends.map((f) => (
+            <div
+              key={f.user_id}
+              className="friend"
+              onClick={async () => {
+                setSelectedFriend(f.user_id);
+                setMessages([]);
 
-              const res = await api.get(`/messages/${currentUser}/${f.user_id}`);
-              setMessages(res.data);
-            }}
-          >
-            <span>{f.user_id}</span>
+                const res = await api.get(
+                  `/messages/${currentUser}/${f.user_id}`
+                );
+                setMessages(res.data);
+              }}
+            >
+              <span>{f.user_id}</span>
 
-            <small className={f.online ? "online" : "offline"}>
-              {f.online ? "Online" : "Offline"}
-            </small>
-          </div>
-        ))}
+              {f.unread_count > 0 ? (
+                <small className="unread-count">{f.unread_count}</small>
+              ) : (
+                <small className={f.online ? "online" : "offline"}>
+                  {f.online ? "Online" : "Offline"}
+                </small>
+              )}
+            </div>
+          ))}
+        </div>
 
-        <button className="logout" onClick={logout}>
-          Logout
-        </button>
+        
       </div>
 
       <div className="chat-section">
@@ -406,7 +513,16 @@ function App() {
                 ← Back
               </button>
 
-              <div className="profile-avatar">☻</div>
+              
+
+              <img
+                className="friend-profile-big"
+                src={
+                  profilePics[
+                    friends.find((f) => f.user_id === selectedFriend)?.profile_pic || 1
+                  ]
+                }
+              />
 
               <h2>{selectedFriend}</h2>
 
@@ -437,7 +553,14 @@ function App() {
               className="chat-header"
               onClick={() => setShowProfile(true)}
             >
-              <div className="chat-user-avatar">☻</div>
+              <img
+                className="chat-user-avatar-img"
+                src={
+                  profilePics[
+                    friends.find((f) => f.user_id === selectedFriend)?.profile_pic || 1
+                  ]
+                }
+              />
 
               <div className="chat-user-info">
                 <h3>{selectedFriend}</h3>
@@ -456,13 +579,36 @@ function App() {
               ) : (
                 messages.map((m, index) => (
                   <div
-                    key={index}
+                    key={m.message_id || index}
                     className={m.sender_id === currentUser ? "msg own" : "msg other"}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setMessageMenu(m.message_id);
+                    }}
+                    onTouchStart={() => {
+                      const timer = setTimeout(() => {
+                        setMessageMenu(m.message_id);
+                      }, 600);
+
+                      m.touchTimer = timer;
+                    }}
+                    onTouchEnd={() => {
+                      clearTimeout(m.touchTimer);
+                    }}
                   >
                     {m.text}
+
+                    {messageMenu === m.message_id && m.sender_id === currentUser && (
+                      <div className="message-menu">
+                        <button onClick={() => deleteMessage(m.message_id)}>
+                          Remove
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))
               )}
+              <div ref={messagesEndRef}></div>
             </div>
 
             <div className="send-box">
