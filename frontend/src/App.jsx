@@ -283,11 +283,7 @@ function App() {
     setFriends([]);
     setPage("chat");
 
-    setTimeout(() => {
-      loadFriends();
-    }, 300);
-    const friendsRes = await api.get(`/friends/${res.data.user_id}`);
-    setFriends(friendsRes.data);
+    await loadFriends(res.data.user_id);
   };
 
   const logout = async () => {
@@ -319,10 +315,10 @@ function App() {
     setSuggestions(res.data);
   };
 
-  const loadFriends = async () => {
-    if (!currentUser) return;
+  const loadFriends = async (user = currentUser) => {
+    if (!user) return;
 
-    const res = await api.get(`/friends/${currentUser}`);
+    const res = await api.get(`/friends/${user}`);
     setFriends(res.data);
   };
 
