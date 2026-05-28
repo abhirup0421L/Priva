@@ -100,10 +100,29 @@ function App() {
       } catch (err) {}
     };
 
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        markOffline();
+      }
+    };
+
     window.addEventListener("beforeunload", markOffline);
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibility
+    );
 
     return () => {
-      window.removeEventListener("beforeunload", markOffline);
+      window.removeEventListener(
+        "beforeunload",
+        markOffline
+      );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibility
+      );
+
       ws.close();
     };
   }, [currentUser, selectedFriend]);
@@ -131,6 +150,25 @@ function App() {
       return () => clearInterval(interval);
     }
   }, [selectedFriend]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const loadUserSettings = async () => {
+      try {
+        const res = await api.get(
+          `/user-settings/${currentUser}`
+        );
+
+        if (!res.data.error) {
+          setMyPic(res.data.profile_pic || 1);
+          setTheme(res.data.theme || 1);
+        }
+      } catch (err) {}
+    };
+
+    loadUserSettings();
+  }, [currentUser]);
 
   useEffect(() => {
     if (shouldScroll) {
