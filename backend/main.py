@@ -393,6 +393,7 @@ async def send_message(data: MessageRequest):
     return {"message": "Message sent"}
 
 
+
 @app.websocket("/ws/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str):
     await manager.connect(user_id, websocket)
@@ -407,6 +408,21 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
             await websocket.receive_text()
 
     except WebSocketDisconnect:
+        manager.disconnect(user_id)
+
+        users_collection.update_one(
+            {"user_id": user_id},
+            {
+                "$set": {
+                    "online": False,
+                    "last_seen": now_ist_text(),
+                }
+            },
+        )
+
+    except Exception as e:
+        print("WebSocket error:", e)
+
         manager.disconnect(user_id)
 
         users_collection.update_one(
