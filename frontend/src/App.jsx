@@ -78,7 +78,38 @@ function App() {
     };
   }, []);
 
-  
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const ws = new WebSocket(
+      `wss://priva-backend.onrender.com/ws/${currentUser}`
+    );
+
+    ws.onmessage = () => {
+      loadFriends();
+
+      if (selectedFriend) {
+        loadMessages();
+        setShouldScroll(true);
+      }
+    };
+
+    ws.onopen = () => {
+      console.log("WebSocket connected");
+    };
+
+    ws.onerror = (err) => {
+      console.log("WebSocket error", err);
+    };
+
+    ws.onclose = () => {
+      console.log("WebSocket disconnected");
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, [currentUser, selectedFriend]);
 
 
   useEffect(() => {
