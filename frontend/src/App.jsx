@@ -85,10 +85,6 @@ function App() {
       `wss://priva-backend.onrender.com/ws/${currentUser}`
     );
 
-    ws.onopen = () => {
-      console.log("WebSocket connected");
-    };
-
     ws.onmessage = () => {
       loadFriends();
 
@@ -96,14 +92,6 @@ function App() {
         loadMessages();
         setShouldScroll(true);
       }
-    };
-
-    ws.onerror = (err) => {
-      console.log("WebSocket error", err);
-    };
-
-    ws.onclose = () => {
-      console.log("WebSocket closed");
     };
 
     return () => {
