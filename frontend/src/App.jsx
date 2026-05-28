@@ -87,13 +87,25 @@ function App() {
 
     ws.onmessage = () => {
       loadFriends();
+
       if (selectedFriend) {
         loadMessages();
         setShouldScroll(true);
       }
     };
 
-    return () => ws.close();
+    const markOffline = async () => {
+      try {
+        await api.post(`/logout/${currentUser}`);
+      } catch (err) {}
+    };
+
+    window.addEventListener("beforeunload", markOffline);
+
+    return () => {
+      window.removeEventListener("beforeunload", markOffline);
+      ws.close();
+    };
   }, [currentUser, selectedFriend]);
 
   useEffect(() => {
