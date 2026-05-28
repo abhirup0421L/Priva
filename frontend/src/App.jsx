@@ -145,27 +145,7 @@ function App() {
     loadUserSettings();
   }, [currentUser]);
 
-  useEffect(() => {
-    if (!currentUser) return;
-
-    let logoutTimer;
-
-    const autoLogoutSelf = async () => {
-      const loggedUser = localStorage.getItem("user_id");
-
-      if (!loggedUser) return;
-
-      await api.post(`/logout/${loggedUser}`);
-
-      localStorage.removeItem("user_id");
-
-      setCurrentUser(null);
-      setSelectedFriend(null);
-      setMessages([]);
-      setFriends([]);
-      setPage("login");
-    };
-
+  
     const resetTimer = () => {
       clearTimeout(logoutTimer);
 
