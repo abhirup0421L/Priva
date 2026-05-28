@@ -146,36 +146,7 @@ function App() {
   }, [currentUser]);
 
   
-    const resetTimer = () => {
-      clearTimeout(logoutTimer);
-
-      logoutTimer = setTimeout(() => {
-        autoLogoutSelf();
-      }, 30 * 1000);
-    };
-
-    const events = [
-      "mousemove",
-      "mousedown",
-      "keypress",
-      "scroll",
-      "touchstart",
-    ];
-
-    events.forEach((event) =>
-      window.addEventListener(event, resetTimer)
-    );
-
-    resetTimer();
-
-    return () => {
-      clearTimeout(logoutTimer);
-
-      events.forEach((event) =>
-        window.removeEventListener(event, resetTimer)
-      );
-    };
-  }, [currentUser];
+   
 
 
   useEffect(() => {
