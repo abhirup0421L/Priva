@@ -280,7 +280,12 @@ function App() {
     setMyPic(res.data.profile_pic || 1);
     setTheme(res.data.theme || 1);
     setShowSelfProfile(false);
+    setFriends([]);
     setPage("chat");
+
+    setTimeout(() => {
+      loadFriends();
+    }, 300);
     const friendsRes = await api.get(`/friends/${res.data.user_id}`);
     setFriends(friendsRes.data);
   };
