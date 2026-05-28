@@ -124,6 +124,8 @@ function App() {
     }
   }, [selectedFriend]);
 
+  
+
   useEffect(() => {
     if (!currentUser) return;
 
@@ -142,6 +144,43 @@ function App() {
 
     loadUserSettings();
   }, [currentUser]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    let logoutTimer;
+
+    const resetTimer = () => {
+      clearTimeout(logoutTimer);
+
+      logoutTimer = setTimeout(async () => {
+        await logout();
+      }, 5 * 60 * 1000); // 5 min
+    };
+
+    const events = [
+      "mousemove",
+      "mousedown",
+      "keypress",
+      "scroll",
+      "touchstart",
+    ];
+
+    events.forEach((event) =>
+      window.addEventListener(event, resetTimer)
+    );
+
+    resetTimer();
+
+    return () => {
+      clearTimeout(logoutTimer);
+
+      events.forEach((event) =>
+        window.removeEventListener(event, resetTimer)
+      );
+    };
+  }, [currentUser]);
+
 
   useEffect(() => {
     if (shouldScroll) {
