@@ -125,7 +125,7 @@ def login(data: LoginRequest):
 
     users_collection.update_one(
         {"user_id": data.user_id},
-        {"$set": {"online": True, "last_active": datetime.utcnow()}},
+        {"$set": {"online": True}},
     )
 
     token = create_token(data.user_id)
@@ -282,18 +282,7 @@ def get_user_settings(user_id: str):
         "theme": user.get("theme", 1),
     }
 
-@app.post("/heartbeat/{user_id}")
-def heartbeat(user_id: str):
-    users_collection.update_one(
-        {"user_id": user_id},
-        {
-            "$set": {
-                "online": True,
-                "last_active": datetime.utcnow(),
-            }
-        },
-    )
-    return {"message": "heartbeat"}
+
 
 @app.get("/friends/{user_id}")
 def get_friends(user_id: str):
@@ -339,10 +328,7 @@ def get_friends(user_id: str):
 
             result.append({
                 "user_id": friend_id,
-                "online": (
-                    friend_user.get("last_active")
-                    and datetime.utcnow() - friend_user.get("last_active") < timedelta(seconds=15)
-                ),
+                "online": friend_user.get("online", False),
                 "last_seen": format_last_seen(friend_user.get("last_seen")),
                 "profile_pic": friend_user.get("profile_pic", 1),
                 "unread_count": unread_count,
