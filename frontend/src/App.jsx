@@ -175,7 +175,7 @@ function App() {
         window.removeEventListener(event, resetTimer)
       );
     };
-  }, [currentUser]);
+  }, [currentUser];
 
 
   useEffect(() => {
