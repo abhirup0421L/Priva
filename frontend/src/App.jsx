@@ -150,12 +150,27 @@ function App() {
 
     let logoutTimer;
 
+    const autoLogoutSelf = async () => {
+      const loggedUser = localStorage.getItem("user_id");
+
+      if (!loggedUser) return;
+
+      await api.post(`/logout/${loggedUser}`);
+
+      localStorage.removeItem("user_id");
+
+      setCurrentUser(null);
+      setSelectedFriend(null);
+      setMessages([]);
+      setPage("login");
+    };
+
     const resetTimer = () => {
       clearTimeout(logoutTimer);
 
-      logoutTimer = setTimeout(async () => {
-        await logout();
-      }, 5 * 60 * 1000); // 5 min
+      logoutTimer = setTimeout(() => {
+        autoLogoutSelf();
+      }, 30 * 1000);
     };
 
     const events = [
