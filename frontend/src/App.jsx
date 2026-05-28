@@ -17,7 +17,9 @@ const profilePics = {
 };
 
 function App() {
-  const [page, setPage] = useState("login");
+  const [page, setPage] = useState(
+    localStorage.getItem("user_id") ? "chat" : "login"
+  );
 
   const [email, setEmail] = useState("");
   const [userId, setUserId] = useState("");
@@ -44,7 +46,19 @@ function App() {
   };
 
 
+  useEffect(() => {
+    const handleEsc = (event) => {
+      if (event.key === "Escape") {
+        setSelectedFriend(null); // close current chat
+      }
+    };
 
+    window.addEventListener("keydown", handleEsc);
+
+    return () => {
+      window.removeEventListener("keydown", handleEsc);
+    };
+  }, []);
 
   useEffect(() => {
     if (!currentUser) return;
