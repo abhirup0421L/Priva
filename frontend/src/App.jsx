@@ -78,26 +78,7 @@ function App() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!currentUser) return;
-
-    const ws = new WebSocket(
-      `wss://priva-backend.onrender.com/ws/${currentUser}`
-    );
-
-    ws.onmessage = () => {
-      loadFriends();
-
-      if (selectedFriend) {
-        loadMessages();
-        setShouldScroll(true);
-      }
-    };
-
-    return () => {
-      ws.close();
-    };
-  }, [currentUser, selectedFriend]);
+  
 
 
   useEffect(() => {
