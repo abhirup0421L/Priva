@@ -723,14 +723,14 @@ p {
 
   .chat-app {
     width: 100vw;
-    height: 100vh;
+    height: calc(var(--app-height, 100vh));
     overflow: hidden;
   }
 
   .sidebar {
     width: 100vw !important;
     min-width: 100vw !important;
-    height: 100vh;
+    height: calc(var(--app-height, 100vh));
     padding: 14px;
     border-right: none;
   }
@@ -738,7 +738,9 @@ p {
   .chat-section {
     width: 100vw !important;
     min-width: 100vw !important;
-    height: 100vh;
+    height: calc(var(--app-height, 100vh));
+    display: flex;
+    flex-direction: column;
   }
 
   .mobile-chat-open .sidebar {
@@ -810,7 +812,11 @@ p {
   }
 
   .messages {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
     padding: 14px;
+    padding-bottom: 12px;
   }
 
   .msg {
@@ -822,6 +828,11 @@ p {
   .send-box {
     padding: 10px 8px;
     gap: 8px;
+    position: sticky;
+    bottom: 0;
+    flex-shrink: 0;
+    background: #050008;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
   }
 
   .send-box input {
@@ -875,42 +886,5 @@ p {
     width: 85% !important;
   }
 }
-/* FIX MOBILE TOP + BOTTOM CUT */
-@media (max-width: 768px) {
-  html,
-  body,
-  #root {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-  }
 
-  .chat-app {
-    height: 100dvh !important;
-    min-height: 100dvh !important;
-    overflow: hidden !important;
-  }
 
-  .sidebar,
-  .chat-section,
-  .profile-view {
-    height: 100dvh !important;
-  }
-
-  .chat-header {
-    flex-shrink: 0;
-    padding-top: max(8px, env(safe-area-inset-top)) !important;
-  }
-
-  .messages {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    padding-bottom: 10px;
-  }
-
-  .send-box {
-    flex-shrink: 0;
-    padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
-  }
-}
