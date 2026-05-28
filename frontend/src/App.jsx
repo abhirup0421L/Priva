@@ -162,6 +162,7 @@ function App() {
       setCurrentUser(null);
       setSelectedFriend(null);
       setMessages([]);
+      setFriends([]);
       setPage("login");
     };
 
@@ -280,6 +281,8 @@ function App() {
     setTheme(res.data.theme || 1);
     setShowSelfProfile(false);
     setPage("chat");
+    const friendsRes = await api.get(`/friends/${res.data.user_id}`);
+    setFriends(friendsRes.data);
   };
 
   const logout = async () => {
