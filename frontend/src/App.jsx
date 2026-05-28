@@ -94,23 +94,26 @@ function App() {
       }
     };
 
-    const markOffline = async () => {
-      try {
-        await api.post(`/logout/${currentUser}`);
-      } catch (err) {}
-    };
+    useEffect(() => {
+      if (!currentUser) return;
 
-    const handleVisibility = () => {
-      if (document.visibilityState === "hidden") {
-        markOffline();
-      }
-    };
+      const ws = new WebSocket(
+        `wss://priva-backend.onrender.com/ws/${currentUser}`
+      );
 
-    window.addEventListener("beforeunload", markOffline);
-    document.addEventListener(
-      "visibilitychange",
-      handleVisibility
-    );
+      ws.onmessage = () => {
+        loadFriends();
+
+        if (selectedFriend) {
+          loadMessages();
+          setShouldScroll(true);
+        }
+      };
+
+      return () => {
+        ws.close();
+      };
+    }, [currentUser, selectedFriend]);
 
     return () => {
       window.removeEventListener(
