@@ -417,10 +417,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
 
     manager.active_connections[user_id] = websocket
 
-    users_collection.update_one(
-        {"user_id": user_id},
-        {"$set": {"online": True}},
-    )
+    
 
     try:
         while True:
