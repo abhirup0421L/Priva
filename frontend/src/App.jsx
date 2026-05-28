@@ -387,7 +387,7 @@ function App() {
   }
 
   return (
-    <div className={`chat-app theme-${theme}`}>
+    <div className={`chat-app theme-${theme} ${selectedFriend ? "mobile-chat-open" : ""}`}>
       <div className="sidebar">
         <div
           className="self-user"
@@ -567,6 +567,18 @@ function App() {
               className="chat-header"
               onClick={() => setShowProfile(true)}
             >
+
+              <button
+                className="mobile-back-chat"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedFriend(null);
+                  setShowProfile(false);
+                }}
+              >
+                ←
+              </button>
+
               <img
                 className="chat-user-avatar-img"
                 src={
