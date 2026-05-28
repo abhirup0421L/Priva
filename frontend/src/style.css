@@ -875,3 +875,42 @@ p {
     width: 85% !important;
   }
 }
+/* FIX MOBILE TOP + BOTTOM CUT */
+@media (max-width: 768px) {
+  html,
+  body,
+  #root {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .chat-app {
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    overflow: hidden !important;
+  }
+
+  .sidebar,
+  .chat-section,
+  .profile-view {
+    height: 100dvh !important;
+  }
+
+  .chat-header {
+    flex-shrink: 0;
+    padding-top: max(8px, env(safe-area-inset-top)) !important;
+  }
+
+  .messages {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-bottom: 10px;
+  }
+
+  .send-box {
+    flex-shrink: 0;
+    padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
+  }
+}
