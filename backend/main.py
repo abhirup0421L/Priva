@@ -267,6 +267,21 @@ def update_theme(data: ThemeRequest):
 
     return {"message": "Theme updated"}
 
+@app.get("/user-settings/{user_id}")
+def get_user_settings(user_id: str):
+    user = users_collection.find_one(
+        {"user_id": user_id},
+        {"_id": 0, "profile_pic": 1, "theme": 1}
+    )
+
+    if not user:
+        return {"error": "User not found"}
+
+    return {
+        "profile_pic": user.get("profile_pic", 1),
+        "theme": user.get("theme", 1),
+    }
+
 @app.get("/friends/{user_id}")
 def get_friends(user_id: str):
     user_id = user_id.strip()
