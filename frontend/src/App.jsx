@@ -283,7 +283,9 @@ function App() {
     setFriends([]);
     setPage("chat");
 
-    await loadFriends(res.data.user_id);
+    setTimeout(() => {
+      loadFriends(res.data.user_id);
+    }, 800);
   };
 
   const logout = async () => {
