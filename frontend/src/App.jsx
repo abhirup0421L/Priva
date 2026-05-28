@@ -45,6 +45,24 @@ function App() {
     setShowProfile(false);
   };
 
+  useEffect(() => {
+    const setMobileHeight = () => {
+      document.documentElement.style.setProperty(
+        "--app-height",
+        `${window.innerHeight}px`
+      );
+    };
+
+    setMobileHeight();
+
+    window.addEventListener("resize", setMobileHeight);
+    window.addEventListener("orientationchange", setMobileHeight);
+
+    return () => {
+      window.removeEventListener("resize", setMobileHeight);
+      window.removeEventListener("orientationchange", setMobileHeight);
+    };
+  }, []);
 
   useEffect(() => {
     const handleEsc = (event) => {
