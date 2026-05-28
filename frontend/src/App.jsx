@@ -85,6 +85,10 @@ function App() {
       `wss://priva-backend.onrender.com/ws/${currentUser}`
     );
 
+    ws.onopen = () => {
+      console.log("WebSocket connected");
+    };
+
     ws.onmessage = () => {
       loadFriends();
 
@@ -94,41 +98,19 @@ function App() {
       }
     };
 
-    useEffect(() => {
-      if (!currentUser) return;
+    ws.onerror = (err) => {
+      console.log("WebSocket error", err);
+    };
 
-      const ws = new WebSocket(
-        `wss://priva-backend.onrender.com/ws/${currentUser}`
-      );
-
-      ws.onmessage = () => {
-        loadFriends();
-
-        if (selectedFriend) {
-          loadMessages();
-          setShouldScroll(true);
-        }
-      };
-
-      return () => {
-        ws.close();
-      };
-    }, [currentUser, selectedFriend]);
+    ws.onclose = () => {
+      console.log("WebSocket closed");
+    };
 
     return () => {
-      window.removeEventListener(
-        "beforeunload",
-        markOffline
-      );
-
-      document.removeEventListener(
-        "visibilitychange",
-        handleVisibility
-      );
-
       ws.close();
     };
   }, [currentUser, selectedFriend]);
+
 
   useEffect(() => {
     if (!currentUser) return;
