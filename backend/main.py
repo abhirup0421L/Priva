@@ -427,27 +427,6 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
     except WebSocketDisconnect:
         manager.disconnect(user_id)
 
-        users_collection.update_one(
-            {"user_id": user_id},
-            {
-                "$set": {
-                    "online": False,
-                    "last_seen": now_ist_text(),
-                }
-            },
-        )
-
     except Exception as e:
         print("WebSocket error:", e)
-
         manager.disconnect(user_id)
-
-        users_collection.update_one(
-            {"user_id": user_id},
-            {
-                "$set": {
-                    "online": False,
-                    "last_seen": now_ist_text(),
-                }
-            },
-        )
