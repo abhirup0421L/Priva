@@ -413,7 +413,9 @@ async def send_message(data: MessageRequest):
 
 @app.websocket("/ws/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str):
-    await manager.connect(user_id, websocket)
+    await websocket.accept()
+
+    manager.active_connections[user_id] = websocket
 
     users_collection.update_one(
         {"user_id": user_id},
@@ -425,8 +427,11 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
             await websocket.receive_text()
 
     except WebSocketDisconnect:
-        manager.disconnect(user_id)
+        print(f"{user_id} disconnected")
 
     except Exception as e:
         print("WebSocket error:", e)
-        manager.disconnect(user_id)
+
+    finally:
+        if user_id in manager.active_connections:
+            del manager.active_connections[user_id]
