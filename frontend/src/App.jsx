@@ -81,33 +81,48 @@ function App() {
   useEffect(() => {
     if (!currentUser) return;
 
-    const ws = new WebSocket(
-      `wss://priva-backend.onrender.com/ws/${currentUser}`
-    );
+    let ws;
+    let reconnectTimer;
 
-    ws.onmessage = () => {
-      loadFriends();
+    const connectWebSocket = () => {
+      ws = new WebSocket(
+        `wss://priva-backend.onrender.com/ws/${currentUser}`
+      );
 
-      if (selectedFriend) {
-        loadMessages();
-        setShouldScroll(true);
-      }
+      ws.onmessage = () => {
+        loadFriends();
+
+        if (selectedFriend) {
+          loadMessages();
+          setShouldScroll(true);
+        }
+      };
+
+      ws.onopen = () => {
+        console.log("WebSocket connected");
+      };
+
+      ws.onerror = (err) => {
+        console.log("WebSocket error", err);
+      };
+
+      ws.onclose = () => {
+        console.log("WebSocket disconnected");
+
+        reconnectTimer = setTimeout(() => {
+          connectWebSocket();
+        }, 2000);
+      };
     };
 
-    ws.onopen = () => {
-      console.log("WebSocket connected");
-    };
-
-    ws.onerror = (err) => {
-      console.log("WebSocket error", err);
-    };
-
-    ws.onclose = () => {
-      console.log("WebSocket disconnected");
-    };
+    connectWebSocket();
 
     return () => {
-      ws.close();
+      clearTimeout(reconnectTimer);
+
+      if (ws) {
+        ws.close();
+      }
     };
   }, [currentUser, selectedFriend]);
 
