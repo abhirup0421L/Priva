@@ -141,9 +141,17 @@ def login(data: LoginRequest):
 
 
 @app.post("/logout/{user_id}")
-def old_logout_blocked(user_id: str):
-    print("OLD LOGOUT BLOCKED:", user_id)
-    return {"message": "Old logout blocked"}
+def logout(user_id: str):
+    users_collection.update_one(
+        {"user_id": user_id},
+        {
+            "$set": {
+                "online": False,
+                "last_seen": now_ist_text(),
+            }
+        },
+    )
+    return {"message": "Logged out"}
 
 
 @app.post("/manual-logout/{user_id}")
