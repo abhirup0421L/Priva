@@ -518,7 +518,14 @@ function App() {
                 </div>
               </div>
 
-              <button className="panel-logout" onClick={logout}>
+              <button
+                className="panel-logout"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  logout();
+                }}
+              >
                 Logout
               </button>
           </div>
