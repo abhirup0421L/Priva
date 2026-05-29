@@ -115,7 +115,18 @@ function App() {
   useEffect(() => {
     if (!currentUser) return;
 
-    loadFriends();
+    const activateUser = async () => {
+      try {
+        await api.post("/login", {
+          user_id: currentUser,
+          password: localStorage.getItem("password"),
+        });
+      } catch (err) {}
+
+      loadFriends();
+    };
+
+    activateUser();
 
     const interval = setInterval(() => {
       loadFriends();
@@ -239,6 +250,7 @@ function App() {
     }
 
     localStorage.setItem("user_id", res.data.user_id);
+    localStorage.setItem("password", password);
     setCurrentUser(res.data.user_id);
     setMyPic(res.data.profile_pic || 1);
     setTheme(res.data.theme || 1);
