@@ -267,7 +267,7 @@ function App() {
   };
 
   const logout = async () => {
-    await api.post(`/logout/${currentUser}`);
+    await api.post(`/manual-logout/${currentUser}`);
 
     localStorage.removeItem("user_id");
     setShowSelfProfile(false);
