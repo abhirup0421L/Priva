@@ -138,13 +138,7 @@ def login(data: LoginRequest):
         "theme": user.get("theme", 1),
     }
 
-@app.post("/activate/{user_id}")
-def activate_user(user_id: str):
-    users_collection.update_one(
-        {"user_id": user_id},
-        {"$set": {"online": True}},
-    )
-    return {"message": "User active"}
+
 
 @app.post("/logout/{user_id}")
 def logout(user_id: str):
