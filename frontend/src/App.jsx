@@ -109,9 +109,7 @@ function App() {
       ws.onclose = () => {
         console.log("WebSocket disconnected");
 
-        reconnectTimer = setTimeout(() => {
-          connectWebSocket();
-        }, 2000);
+        
       };
     };
 
