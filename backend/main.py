@@ -141,10 +141,14 @@ def login(data: LoginRequest):
 
 
 @app.post("/logout/{user_id}")
-def logout(user_id: str):
-    print("LOGOUT API CALLED FOR:", user_id)
+def logout(user_id: str, manual: bool = False):
+    if manual != True:
+        print("AUTO LOGOUT BLOCKED FOR:", user_id)
+        return {"message": "Auto logout blocked"}
+
+    print("MANUAL LOGOUT API CALLED FOR:", user_id)
+
     users_collection.update_one(
-        
         {"user_id": user_id},
         {
             "$set": {
