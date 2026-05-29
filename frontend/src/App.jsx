@@ -115,12 +115,7 @@ function App() {
   useEffect(() => {
     if (!currentUser) return;
 
-    const startUser = async () => {
-      await api.post(`/activate/${currentUser}`);
-      loadFriends();
-    };
-
-    startUser();
+    loadFriends();
 
     const interval = setInterval(() => {
       loadFriends();
@@ -128,6 +123,8 @@ function App() {
 
     return () => clearInterval(interval);
   }, [currentUser]);
+
+  
 
   useEffect(() => {
     if (selectedFriend) {
