@@ -416,18 +416,19 @@ async def send_message(data: MessageRequest):
 async def websocket_endpoint(websocket: WebSocket, user_id: str):
     await websocket.accept()
 
+    print(f"{user_id} connected")
+
     manager.active_connections[user_id] = websocket
 
     try:
         while True:
-            await websocket.receive_text()
+            await websocket.receive()
 
     except WebSocketDisconnect:
         print(f"{user_id} disconnected")
 
     except Exception as e:
-        print("WebSocket error:", e)
+        print("WebSocket error:", str(e))
 
     finally:
-        if user_id in manager.active_connections:
-            del manager.active_connections[user_id]
+        manager.active_connections.pop(user_id, None)
