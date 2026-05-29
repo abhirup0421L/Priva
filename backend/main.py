@@ -141,7 +141,15 @@ def login(data: LoginRequest):
 
 
 @app.post("/logout/{user_id}")
-def logout(user_id: str):
+def old_logout_blocked(user_id: str):
+    print("OLD LOGOUT BLOCKED:", user_id)
+    return {"message": "Old logout blocked"}
+
+
+@app.post("/manual-logout/{user_id}")
+def manual_logout(user_id: str):
+    print("MANUAL LOGOUT:", user_id)
+
     users_collection.update_one(
         {"user_id": user_id},
         {
@@ -151,15 +159,6 @@ def logout(user_id: str):
             }
         },
     )
-
-    return {"message": "Logged out"}
-
-    messages_collection.delete_many({
-        "$or": [
-            {"sender_id": user_id, "read": True},
-            {"receiver_id": user_id, "read": True},
-        ]
-    })
 
     return {"message": "Logged out"}
 
