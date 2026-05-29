@@ -424,8 +424,6 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
 
     manager.active_connections[user_id] = websocket
 
-    
-
     try:
         while True:
             await websocket.receive_text()
